@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: skill_intelligence_db
+    environment:
+      POSTGRES_USER: mospi_admin
+      POSTGRES_PASSWORD: mospi_password
+      POSTGRES_DB: skill_intelligence
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: skill_intelligence_backend
+    environment:
+      DATABASE_URL: postgresql://mospi_admin:mospi_password@db:5432/skill_intelligence
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      DEMO_MODE: ${DEMO_MODE:-true}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: skill_intelligence_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
